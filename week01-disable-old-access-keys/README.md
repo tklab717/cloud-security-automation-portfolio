@@ -41,3 +41,27 @@ source venv/bin/activate
 
 # 必要なライブラリをインストール
 pip install -r requirements.txt
+```
+
+### スクリプト実行
+
+```bash
+python disable_old_keys.py
+```
+
+### テスト方法
+```bash
+pytest test_disable_old_keys.py
+```
+#### テスト内容
+- is_key_old関数の単体テスト
+- disable_old_keys関数のテスト
+  - motoによる仮想IAM環境にて動作検証
+
+### ディレクトリ構成
+```plaintext
+week01-disable-old-access-keys/
+├── disable_old_keys.py       # 本体スクリプト
+├── test_disable_old_keys.py  # テストスクリプト
+├── requirements.txt          # 必要ライブラリ
+└── README.md                 # この説明ファイル
