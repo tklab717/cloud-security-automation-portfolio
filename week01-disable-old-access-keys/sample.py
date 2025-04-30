@@ -1,1 +1,0 @@
-from disable_old_keys import is_key_old, disable_old_keys

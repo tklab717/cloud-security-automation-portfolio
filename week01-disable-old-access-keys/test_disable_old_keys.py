@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime, timezone, timedelta
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from moto import mock_aws
 import boto3
 
@@ -49,3 +49,32 @@ def test_disable_old_keys_behavior():
             access_key_id = key['AccessKeyId']
             access_status = key['Status']
             print(f"username: {username},Status: {access_status}")
+
+@patch('disable_old_keys.boto3.client')
+def test_disable_old_keys_detail(mock_boto_client):
+    mock_iam = MagicMock()
+    mock_boto_client.return_value = mock_iam
+    mock_iam.list_users.return_value = {
+        'Users': [{'UserName': 'test-user'}]
+    }
+    mock_iam.list_access_keys.return_value = {
+        'AccessKeyMetadata': [{
+            'AccessKeyId': 'AKIAOLDKEY1234'
+        }]
+    }
+    #最終アクセス日を100日前にする
+    last_used_date = datetime.now(timezone.utc) - timedelta(days=100)
+    mock_iam.get_access_key_last_used.return_value = {
+        'AccessKeyLastUsed': {
+            'LastUsedDate': last_used_date
+        }
+    }
+    #無効化閾値を90日として、最終アクセス日が該当する場合を実行
+    disable_old_keys(threshold_days=90)
+
+    #実行した結果、無効化処理が実行されているか確認。
+    mock_iam.update_access_key.assert_called_once_with(
+        UserName='test-user',
+        AccessKeyId='AKIAOLDKEY1234',
+        Status='Inactive'
+    )
